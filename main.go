@@ -1,13 +1,10 @@
 package main
 
 import (
-	"context"
-	"crypto/tls"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,7 +18,6 @@ import (
 )
 
 var (
-	client             *http.Client
 	upStream           string
 	homeIp             string
 	mutex              sync.RWMutex
@@ -29,7 +25,7 @@ var (
 	localServerAddress string
 )
 
-const ipURL = "http://ip.clearcode.cn/kv?key=ip"
+const ipURL = "http://101.200.141.249:9999/kv?key=ip"
 
 func init() {
 	flag.StringVar(&upStream, "s", "114.114.114.114:53,223.5.5.5:53", "upstream dns servers")
@@ -37,30 +33,8 @@ func init() {
 	flag.StringVar(&homeDomain, "h", "mrj.com", "hosts")
 }
 
-func initHttpClient() {
-	dialer := &net.Dialer{
-		Resolver: &net.Resolver{
-			PreferGo: true,
-			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-				up0 := strings.Split(upStream, ",")[0]
-				return net.Dial(network, up0)
-			},
-		},
-	}
-
-	client = &http.Client{
-		Transport: &http.Transport{
-			DialContext: nil,
-			Dial:        dialer.Dial,
-			DialTLS: func(network, addr string) (net.Conn, error) {
-				return tls.DialWithDialer(dialer, network, addr, nil)
-			},
-		},
-	}
-}
-
 func getIpRemote() {
-	resp, err := client.Get(ipURL)
+	resp, err := http.DefaultClient.Get(ipURL)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -85,7 +59,6 @@ func getIp() string {
 
 func main() {
 	flag.Parse()
-	initHttpClient()
 	getIpRemote()
 	go func() {
 		tk := time.NewTicker(1 * time.Minute)
