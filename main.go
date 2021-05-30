@@ -29,7 +29,7 @@ var (
 	localServerAddress string
 )
 
-const ipURL = "http://ip.clearcode.cn/kv?k=ip"
+const ipURL = "http://ip.clearcode.cn/kv?key=ip"
 
 func init() {
 	flag.StringVar(&upStream, "s", "114.114.114.114:53,223.5.5.5:53", "upstream dns servers")
