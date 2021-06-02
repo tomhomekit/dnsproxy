@@ -27,10 +27,17 @@ var (
 
 const ipURL = "http://101.200.141.249:9999/kv?key=ip"
 
+var (
+	domains = []string{
+		"mrj.com",
+		"pi.hole",
+	}
+)
+
 func init() {
 	flag.StringVar(&upStream, "s", "114.114.114.114:53,223.5.5.5:53", "upstream dns servers")
 	flag.StringVar(&localServerAddress, "a", "0.0.0.0:53", "hosts")
-	flag.StringVar(&homeDomain, "h", "mrj.com", "hosts")
+	//flag.StringVar(&homeDomain, "h", "mrj.com", "hosts")
 }
 
 func getIpRemote() {
@@ -76,9 +83,16 @@ func startLocalDnsServer() {
 	internal.OnQuestion = func(q dns.Question, w dns.ResponseWriter, r *dns.Msg) bool {
 		name := string(q.Name)
 		name = name[:len(name)-1]
-		if !strings.HasSuffix(name, homeDomain) {
+		var find bool
+		for _, v := range domains {
+			if strings.HasSuffix(name, v) {
+				find = true
+			}
+		}
+		if !find {
 			return false
 		}
+
 		x := fmt.Sprintf("%s IN A %s", q.Name, getIp())
 		rr, err := dns.NewRR(x)
 		if err != nil {
